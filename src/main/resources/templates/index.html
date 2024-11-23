@@ -11,7 +11,7 @@
     <main class="container">
         <div class="p-4 p-md-5 mb-4 text-center">
             <div class="container col-md-6">
-                <h1>Game Project Lists</h1>
+                <h1>My Game Project Lists</h1>
 
                 <div id="error" class="error pt-3">
                     <div th:if="${userAddedMsg}">
@@ -38,7 +38,7 @@
                 <p class="lead">To join to the service, <a href="#" th:href="@{/newUser}">Click</a> here</p>
             </div>
             <div sec:authorize="hasRole('ROLE_USER') || hasRole('ROLE_MANAGER')">
-                <p class="lead">Click <a href="#" th:href="@{/secured/addBoardGame}">Here</a> to add a boardgame!</p>
+                <p class="lead">Click <a href="#" th:href="@{/secured/addBoardGame}">Please Here</a> to add a boardgame!</p>
                 <form action="#" th:action="@{/logout}" method="post">
                     <input type="submit" value="Logout" class="btn btn-primary m-2 pb-2">
                 </form>

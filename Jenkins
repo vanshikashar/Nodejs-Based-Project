@@ -1,0 +1,102 @@
+pipeline {
+    agent any
+    
+    tools{
+        jdk "jdk17"
+        maven "maven"
+    }
+    environment{
+        SONAR_HOME = tool 'sonar-scanner'
+    }
+
+    stages {
+        stage('Git Clone') {
+            steps {
+                git 'https://github.com/vanshikashar/Nodejs-Based-Project.git'
+            }
+        }
+        stage('Compile the code') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        stage('Code Test') {
+            steps {
+                sh "mvn test"
+            }
+        }
+        stage('Build the Code') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+        stage('File Scan') {
+            steps {
+                sh "trivy fs --format json -o index.json ."
+            }
+        }
+        stage('Sonarqube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh '''
+                    $SONAR_HOME/bin/sonar-scanner  \
+                    -Dsonar.projectName=gamingproject \
+                    -Dsonar.projectKey=gamingproject \
+                    '''
+                }
+                
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+               timeout(time: 1, unit: 'HOURS') {
+                   waitForQualityGate abortPipeline: false
+               }
+            }
+        }
+        stage('Creating a Image') {
+            steps {
+                script{
+                    // This step should not normally be used in your script. Consult the inline help for details.
+                    withDockerRegistry(credentialsId: 'docker') {
+                        // some block
+                        sh 'docker build -t onlinelearningofficial/gamingproject:v1 .'
+                        
+                    }
+                }
+                
+            }
+        }
+        stage('Image Scan') {
+            steps {
+                sh "trivy image --format json -o Image.json onlinelearningofficial/gamingproject:v1"
+            }
+        }
+        stage('Push the Image to DockerHub') {
+            steps {
+                script{
+                    // This step should not normally be used in your script. Consult the inline help for details.
+                    withDockerRegistry(credentialsId: 'docker') {
+                        // some block
+                        sh 'docker push onlinelearningofficial/gamingproject:v1 '
+                        
+                    }
+                }
+                
+            }
+        }
+        stage('Deploy the Application') {
+            steps {
+                script{
+                    // This step should not normally be used in your script. Consult the inline help for details.
+                    withDockerRegistry(credentialsId: 'docker') {
+                        // some block
+                        sh 'docker run -d --name gamingproject -p 8080:8080 onlinelearningofficial/gamingproject:v1 '
+                        
+                    }
+                }
+                
+            }
+        }
+    }
+}
